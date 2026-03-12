@@ -11,7 +11,7 @@ A sleek, real-time Formula 1 season tracker built for the 2026 championship. All
 - **Mobile responsive** — works on desktop and phone
 
 ## Data
-Powered by the [Jolpica API](https://jolpi.ca) (free, no API key required). Data updates 1–2 days after each race weekend.
+Powered by the [Jolpica API](https://jolpi.ca). Data updates 1–2 days after each race weekend.
 
 ## Built with
 - Vanilla HTML / CSS / JavaScript
