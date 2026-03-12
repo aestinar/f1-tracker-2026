@@ -417,11 +417,11 @@ async function loadDriverStandings(){
     document.getElementById('drv-standings-sub').textContent=`After Round ${rnd}`;
     document.getElementById('standings-round-label').textContent=`After Round ${rnd}`;
     const tbody=document.getElementById('drv-tbody');
-    tbody.innerHTML=stds.map((s,i)=>{const drv=s.Driver,con=s.Constructors[0],col=tcolor(con?.name||''),fl=flag(drv.nationality);return`<tr class="${i===0?'row1':''}"><td class="td-p">${s.position}</td><td><div class="td-drv"><span>${fl}</span><span class="td-bar" style="background:${col};"></span><span class="td-nm">${drv.givenName} ${drv.familyName}</span><span class="td-ab">${drv.code||''}</span></div></td><td class="td-w">${s.wins>0?s.wins:'—'}</td><td class="td-pts"><span class="td-pts-plain">${s.points}</span></td></tr>`;}).join('');
+    tbody.innerHTML=stds.map((s,i)=>{const drv=s.Driver,con=s.Constructors?.[0],col=tcolor(con?.name||''),fl=flag(drv.nationality),code=drv.code||(drv.familyName||'').substring(0,3).toUpperCase();return`<tr class="${i===0?'row1':''}"><td class="td-p">${s.position}</td><td><div class="td-drv"><span>${fl}</span><span class="td-bar" style="background:${col};"></span><span class="td-nm">${drv.givenName} ${drv.familyName}</span><span class="td-ab">${code}</span></div></td><td class="td-w">${parseInt(s.wins)>0?s.wins:'—'}</td><td class="td-pts"><span class="td-pts-plain">${s.points}</span></td></tr>`;}).join('');
     drvRows=Array.from(tbody.querySelectorAll('tr'));
     drvRows.forEach((r,i)=>r.style.display=i<10?'':'none');
     // Leader card
-    const L=stds[0],ld=L.Driver,lc=L.Constructors[0],lcol=tcolor(lc?.name||''),lfl=flag(ld.nationality),pid=ld.driverId,purl=photoUrl(pid);
+    const L=stds[0],ld=L.Driver,lc=L.Constructors?.[0],lcol=tcolor(lc?.name||''),lfl=flag(ld.nationality),pid=ld.driverId,purl=photoUrl(pid);
     document.getElementById('leader-round-label').textContent=`After Round ${rnd}`;
     document.getElementById('leader-name').innerHTML=`${ld.givenName}<br>${ld.familyName}`;
     document.getElementById('leader-nat').innerHTML=`${lfl} &nbsp; ${ld.nationality} · #${ld.permanentNumber||'?'}`;
@@ -433,8 +433,16 @@ async function loadDriverStandings(){
     document.getElementById('ls-races').textContent=rnd;
     document.getElementById('leader-initials').textContent=inits(ld.givenName,ld.familyName);
     document.getElementById('leader-num').textContent=`#${ld.permanentNumber||'?'}`;
-    if(purl){const img=document.getElementById('leader-photo');img.src=purl;img.alt=`${ld.givenName} ${ld.familyName}`;}
-    else{document.getElementById('leader-photo').style.display='none';document.getElementById('leader-fallback').style.display='flex';}
+    // Always show fallback initials first; try loading photo on top
+    document.getElementById('leader-photo').style.display='none';
+    document.getElementById('leader-fallback').style.display='flex';
+    if(purl){
+      const img=document.getElementById('leader-photo');
+      img.onload=()=>{img.style.display='block';document.getElementById('leader-fallback').style.display='none';};
+      img.onerror=()=>{img.style.display='none';document.getElementById('leader-fallback').style.display='flex';};
+      img.alt=`${ld.givenName} ${ld.familyName}`;
+      img.src=purl;
+    }
     // Wins/podiums
     try{
       const rr=await fetch(`https://api.jolpi.ca/ergast/f1/current/drivers/${pid}/results.json?limit=100`);
@@ -453,7 +461,7 @@ async function loadConstructorStandings(){
     const d=await r.json();
     const list=d.MRData.StandingsTable.StandingsLists[0];
     if(!list)return;
-    document.getElementById('con-tbody').innerHTML=list.ConstructorStandings.map((s,i)=>{const col=tcolor(s.Constructor.name);return`<tr class="${i===0?'row1':''}"><td class="td-p">${s.position}</td><td><div class="td-drv"><span class="td-bar" style="background:${col};height:20px;"></span><span class="td-nm">${s.Constructor.name}</span></div></td><td class="td-pts"><span class="td-pts-plain">${s.points}</span></td></tr>`;}).join('');
+    document.getElementById('con-tbody').innerHTML=list.ConstructorStandings.map((s,i)=>{const name=s.Constructor?.name||'Unknown';const col=tcolor(name);return`<tr class="${i===0?'row1':''}"><td class="td-p">${s.position}</td><td><div class="td-drv"><span class="td-bar" style="background:${col};height:20px;"></span><span class="td-nm">${name}</span></div></td><td class="td-pts"><span class="td-pts-plain">${s.points}</span></td></tr>`;}).join('');
   }catch(e){document.getElementById('con-tbody').innerHTML='<tr><td colspan="3"><div class="api-error">Could not load constructors</div></td></tr>';}
 }
 
